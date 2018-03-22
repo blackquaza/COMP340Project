@@ -21,6 +21,8 @@
 
 int main () {
 
+	atexit(gracefulClose);
+
 	// Looked up the following for specific character outputs:
 	//
 	// https://stackoverflow.com/questions/21829705/how-can-output-be-directed-to-specific-coordinates-in-the-linux-terminal
@@ -46,7 +48,13 @@ int main () {
 		  // manually later to make sure control characters are not shown.
 	
 	char input;
-	int x = 0, y = 0;
+	int x = 0, y = 0, maxx, maxy;
+	getmaxyx(stdscr, maxy, maxx);
+
+	// Although the terminal will show the output, the actual changes are going to be
+	// made in this chunk of memory here.
+	char *output = calloc(maxy * maxx, sizeof(char));
+	//printw("%i,%i,%i,%i", y, x, maxy, maxx);
 
 	while (input = getch()) {
 
@@ -54,30 +62,65 @@ int main () {
 
 			case 4: // Left arrow
 				x--;
+				if (x < 0) x++; // If less than zero, move back.
 				move(y, x);
 				break;
 			case 5: // Right arrow
 				x++;
+				// If at the end of the line, move back.
+				if (output[y * maxx + x] == '\0' /*|| 
+				    output[y * maxx + x] == '\n'*/) x--;
 				move(y, x);
 				break;
 			case 3: // Up arrow
 				y--;
+				if (y < 0) y++; // If less than zero, move back.
+				while (output[y * maxx + x] == '\0' /*||
+				       output[y * maxx + x] == '\n'*/) {
+					if (x == 0) break;
+					x--;
+				}
 				move(y, x);
 				break;
 			case 2: // Down arrow
 				y++;
+				// Back up until we find the line again.
+				while (output[y * maxx + x] == '\0' /*||
+				       output[y * maxx + x] == '\n'*/) {
+					x--;
+					if (x == -1) {
+						// Go back up if there's nothing below.
+						x = maxx - 1;
+						y--;
+					}
+				}
 				move(y, x);
 				break;
+			case 27: // Escape key
+				// This is used to exit the loop. It's acutally checked
+				// below, because a break here will just break the switch.
+				return;
+				break;
+			case 10: // Enter key
+				for (int i = y * maxx + x + 1; i < (y + 1) * maxx; i++) {
+					output[i] = '\0';
+				}
 			default:
 				printw("%c", input);
+				output[y * maxx + x] = input;
+				// This makes sure that there's always a newline at
+				// the end of a given line, since it can't go straight
+				// to NULL
+				if (output[y * maxx + x + 1] == '\0')
+					output[y * maxx + x + 1] = '\n';
 				getyx(stdscr, y, x);
 
 		}
+
+		//if (input == 27) break;
 
 		refresh();
 
 	}
 	
-	atexit(gracefulClose);
-
 }
