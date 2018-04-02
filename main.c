@@ -97,27 +97,59 @@ int main () {
 				move(y, x);
 				break;
 			case 27: // Escape key
-				// This is used to exit the loop. It's acutally checked
-				// below, because a break here will just break the switch.
+				// This is used to exit the loop.
 				return;
+				break;
+			case 7: // Backspace key
+				if (x != 0) {
+					x--;
+					int i = 0;
+					// Shove everything over to the left one space.
+					while (1) {
+						output[y * maxx + x + i] =
+							output[y * maxx + x + i + 1];
+						i++;
+						if (output[y * maxx + x + i] == '\0') break;
+					}
+					//output[y * maxx + x] = ' ';
+					move(y, x);
+					for (int j = 0; j <= i; j++) {
+						printw("%c", output[y * maxx + x + j]);
+					}
+					//printw(" ");
+					move(y, x);
+				}
+				break;
+			case 15: // F7 key
 				break;
 			case 10: // Enter key
 				for (int i = y * maxx + x + 1; i < (y + 1) * maxx; i++) {
 					output[i] = '\0';
 				}
-			default:
-				printw("%c", input);
+			default:	
+				// These values came from testing the values of each keystroke
+				// on my laptop computer.
+				if ((input < 32 && input != 10) || input > 126) break;
+				//printw("%c", input);
+				int i = 0;
+				// Shove everything over to the right one space.
+				while (output[y * maxx + x + i] != '\0') i++;
+				for (int j = i; j > 0; j--) {
+					output[y * maxx + x + j] = 
+						output[y * maxx + x + j - 1];
+				}
 				output[y * maxx + x] = input;
+				printw("%c", input);
+				getyx(stdscr, y, x);
+				for (int j = 0; j < i - 1; j++) {
+					printw("%c", output[y * maxx + x + j]);
+				}
+				move(y, x);
 				// This makes sure that there's always a newline at
 				// the end of a given line, since it can't go straight
 				// to NULL
-				if (output[y * maxx + x + 1] == '\0')
-					output[y * maxx + x + 1] = '\n';
-				getyx(stdscr, y, x);
 
 		}
-
-		//if (input == 27) break;
 
 		refresh();
 
