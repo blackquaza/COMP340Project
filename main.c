@@ -53,7 +53,13 @@ int main () {
 
 	// Although the terminal will show the output, the actual changes are going to be
 	// made in this chunk of memory here.
-	char *output = calloc(maxy * maxx, sizeof(char));
+	//char *output = calloc(maxy * maxx, sizeof(char));
+	int numlines = 1;
+	const int MAXLEN = 50;
+	char **output = malloc(sizeof(char *));
+	output[0] = calloc(MAXLEN, sizeof(char));
+	output[0][0] = '\n';
+
 	//printw("%i,%i,%i,%i", y, x, maxy, maxx);
 
 	while (input = getch()) {
@@ -68,15 +74,13 @@ int main () {
 			case 5: // Right arrow
 				x++;
 				// If at the end of the line, move back.
-				if (output[y * maxx + x] == '\0' /*|| 
-				    output[y * maxx + x] == '\n'*/) x--;
+				if (output[y][x] == '\0') x--;
 				move(y, x);
 				break;
 			case 3: // Up arrow
 				y--;
 				if (y < 0) y++; // If less than zero, move back.
-				while (output[y * maxx + x] == '\0' /*||
-				       output[y * maxx + x] == '\n'*/) {
+				while (output[y][x] == '\0') {
 					if (x == 0) break;
 					x--;
 				}
@@ -84,14 +88,23 @@ int main () {
 				break;
 			case 2: // Down arrow
 				y++;
-				// Back up until we find the line again.
-				while (output[y * maxx + x] == '\0' /*||
-				       output[y * maxx + x] == '\n'*/) {
-					x--;
-					if (x == -1) {
-						// Go back up if there's nothing below.
-						x = maxx - 1;
-						y--;
+				// Can't go farther.
+				if (y == numlines) {
+					y--;
+					while (1) {
+
+						if (output[y][x] == '\n') break;
+						x++;
+					}
+				} else {
+					// Back up until we find the line again.
+					while (output[y][x] == '\0') {
+						x--;
+						if (x == -1) {
+							// Go back up if there's nothing below.
+							x = MAXLEN - 1;
+							y--;
+						}
 					}
 				}
 				move(y, x);
@@ -106,43 +119,54 @@ int main () {
 					int i = 0;
 					// Shove everything over to the left one space.
 					while (1) {
-						output[y * maxx + x + i] =
-							output[y * maxx + x + i + 1];
+						output[y][x + i] = output[y][x + i + 1];
+						if (output[y][x + i] == '\0') break;
 						i++;
-						if (output[y * maxx + x + i] == '\0') break;
 					}
-					//output[y * maxx + x] = ' ';
 					move(y, x);
 					for (int j = 0; j <= i; j++) {
-						printw("%c", output[y * maxx + x + j]);
+						if (output[y][x + j] != '\0') {
+							printw("%c", output[y][x + j]);
+						} else {
+							printw(" ");
+						}
 					}
-					//printw(" ");
 					move(y, x);
 				}
 				break;
 			case 15: // F7 key
 				break;
 			case 10: // Enter key
-				for (int i = y * maxx + x + 1; i < (y + 1) * maxx; i++) {
+				/*for (int i = y * maxx + x + 1; i < (y + 1) * maxx; i++) {
 					output[i] = '\0';
+				}*/
+				if (y == numlines - 1) {
+					numlines++;
+					output = realloc(output, numlines * sizeof(char *));
+					output[y+1] = calloc(MAXLEN, sizeof(char));
+					output[y+1][0] = '\n';
 				}
 			default:	
 				// These values came from testing the values of each keystroke
 				// on my laptop computer.
 				if ((input < 32 && input != 10) || input > 126) break;
-				//printw("%c", input);
 				int i = 0;
 				// Shove everything over to the right one space.
-				while (output[y * maxx + x + i] != '\0') i++;
-				for (int j = i; j > 0; j--) {
-					output[y * maxx + x + j] = 
-						output[y * maxx + x + j - 1];
+				if (input != 10) {
+					while (output[y][x + i] != '\0') i++;
+					for (int j = i; j > 0; j--) {
+						output[y][x + j] = output[y][x + j - 1];
+					}
+					output[y][x] = input;
 				}
-				output[y * maxx + x] = input;
 				printw("%c", input);
 				getyx(stdscr, y, x);
-				for (int j = 0; j < i - 1; j++) {
-					printw("%c", output[y * maxx + x + j]);
+				for (int j = 0; j < i; j++) {
+					if (output[y][x + j] != '\0') {
+						printw("%c", output[y][x + j]);
+					} else {
+						printw(" ");
+					}
 				}
 				move(y, x);
 				// This makes sure that there's always a newline at
