@@ -98,19 +98,15 @@ int main (int argc, const char *argv[]) {
 	//char *output = calloc(maxy * maxx, sizeof(char));
 	int numlines = 1;
 	const int MAXLEN = 50;
-	char **output;
-	//char **output = malloc(sizeof(char *));
-	//output[0] = calloc(MAXLEN, sizeof(char));
-	//output[0][0] = '\n';
+	char **output = calloc(MAXLEN, sizeof(char *));
 
-	//FILE *fPtr = fopen(filepath, "a+");
-	
 	int fd = open(filepath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	FILE *fPtr = fdopen(fd, "w+");
 
 	// Take the contents of the file and stick them in memory.
 	// Defined in misc.c
 	numlines = readFile(fPtr, output);
+	move(0, 0);
 
 	//printw("t3:%s\n", numlines);
 	//refresh();

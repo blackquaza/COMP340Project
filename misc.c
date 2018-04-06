@@ -62,7 +62,7 @@ int readFile(FILE *fPtr, char **output) {
 	int numlines = 0, tempsize = 50;
 	int zero = 50;
 	int read = 0;
-	output = calloc(tempsize, sizeof(char *));
+	
 	//printw("fPtr: %i\n", fPtr);
 	//refresh();
 
@@ -111,7 +111,7 @@ int readFile(FILE *fPtr, char **output) {
 			tempsize += 50;
 			output = realloc(output, tempsize * sizeof(char *));
 
-			// realloc doesn't get the new values to NULL. Do this now
+			// realloc doesn't set the new values to NULL. Do this now.
 			for (int i = numlines; i < tempsize; i++) {
 				output[i] = NULL;
 			}
