@@ -2,7 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 //#include <sys/ioctl.h>
+
+#define _POSIX_C_SOURCE
+#define _GNU_SOURCE
 
 // Ended up just using the NCURSES library for terminal control and output. The
 // primary purpose of the assignment is input and the file system. The input is
@@ -19,7 +24,7 @@
 #include "misc.c"
 
 
-int main () {
+int main (int argc, const char *argv[]) {
 
 	atexit(gracefulClose);
 
@@ -39,6 +44,42 @@ int main () {
 	// https://stackoverflow.com/questions/17766550/ctrl-c-interrupt-event-handling-in-linux
 	// https://linux.die.net/man/3/atexit
 	
+	// Not going to use getopt here, since the only options are --help (or -h) or the
+	// file to open.
+	
+	// Too many arguments. Error out.
+	if (argc > 2) {
+
+		wrongUse();
+		return -1;
+
+	}
+
+	char *filepath;
+
+	// Should never happen, but just in case we'll plan for it.
+	if (argc == 0) return -1;
+
+	// No argument provided. Set the default file name as "newFile".
+	if (argc == 1) {
+
+		filepath = malloc(8 * sizeof(char));
+		strcpy(filepath, "newFile\0");
+
+	} else {
+
+		// If the argument is the help request, send the message and exit.
+		if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
+
+			helpSpam();
+			return 0;
+
+		}
+
+		filepath = argv[1];
+
+	}
+
 	// Various NCURSES initialization commands.
 	initscr(); // Initializes a new screen for the terminal.
 	cbreak(); // Disables line buffering, giving the character immediately
@@ -56,9 +97,16 @@ int main () {
 	//char *output = calloc(maxy * maxx, sizeof(char));
 	int numlines = 1;
 	const int MAXLEN = 50;
-	char **output = malloc(sizeof(char *));
-	output[0] = calloc(MAXLEN, sizeof(char));
-	output[0][0] = '\n';
+	char **output;
+	//char **output = malloc(sizeof(char *));
+	//output[0] = calloc(MAXLEN, sizeof(char));
+	//output[0][0] = '\n';
+
+	int fd = open(filepath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+
+	// Take the contents of the file and stick them in the terminal.
+	// Defined in misc.c
+	//void readFile(fd, output);
 
 	//printw("%i,%i,%i,%i", y, x, maxy, maxx);
 
