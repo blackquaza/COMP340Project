@@ -55,28 +55,56 @@ void helpSpam() {
 }
 
 // Reads the contents of the file descriptor into the **output array.
-void readFile(int fd, char **output) {
+// returns the number of lines.
+int readFile(FILE *fPtr, char **output) {
 
 	//
 	int numlines = 0, tempsize = 50;
+	int zero = 50;
+	int read = 0;
 	output = calloc(tempsize, sizeof(char *));
+	//printw("fPtr: %i\n", fPtr);
+	//refresh();
 
 	while (1) {
 
+		output[numlines] = calloc(50, sizeof(char));
+		//char *testchar = NULL;
+
 		// getline will automatically size the buffer for us. That's nice.
-		if (getline(output[numlines], 0, fd) == -1) {
+		if ((read = getline(&(output[numlines]), &zero, fPtr)) == -1) {
+			//printw("%i\n%i", read, errno);
+			//refresh();
 
 			// If getline failed to read anything, call it quits.
 
 			// First, remove the excess space at the ends of the array.
 			output = realloc(output, (numlines+1) * sizeof(char *));
 			output[numlines][0] = '\n';
+
+			//printw("test2");
+			//refresh();
+
+			// Show the results on the screen.
+			for (int i = 0; i < numlines+1; i++) {
+
+				//printw("%s", output[i]);
+
+			}
+
+			refresh();
 			break;
 
 
 		}
 
+		//printw("%i", numlines);
+		//refresh();
+
+		printw("%s", output[numlines]);
 		numlines++;
+		//printf("%i\n", numlines);
+		//refresh();
 
 		if (numlines >= tempsize) {
 
@@ -91,5 +119,7 @@ void readFile(int fd, char **output) {
 		}
 
 	}
+
+	return numlines + 1;
 
 }

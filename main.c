@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 //#include <sys/ioctl.h>
+#include <errno.h>
 
 #define _POSIX_C_SOURCE
 #define _GNU_SOURCE
@@ -102,11 +103,20 @@ int main (int argc, const char *argv[]) {
 	//output[0] = calloc(MAXLEN, sizeof(char));
 	//output[0][0] = '\n';
 
+	//FILE *fPtr = fopen(filepath, "a+");
+	
 	int fd = open(filepath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	FILE *fPtr = fdopen(fd, "w+");
 
-	// Take the contents of the file and stick them in the terminal.
+	// Take the contents of the file and stick them in memory.
 	// Defined in misc.c
-	//void readFile(fd, output);
+	numlines = readFile(fPtr, output);
+
+	//printw("t3:%s\n", numlines);
+	//refresh();
+	// Print the contents to the terminal.
+	//for (int i = 0; i < numlines; i++) printw("%s", output[i]);
+	//refresh();	
 
 	//printw("%i,%i,%i,%i", y, x, maxy, maxx);
 
