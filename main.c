@@ -4,7 +4,6 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-//#include <sys/ioctl.h>
 #include <errno.h>
 
 #define _POSIX_C_SOURCE
@@ -24,27 +23,15 @@
 // Includes various miscellanious commands.
 #include "misc.c"
 
-
 int main (int argc, const char *argv[]) {
-
-	atexit(gracefulClose);
-
-	// Looked up the following for specific character outputs:
-	//
-	// https://stackoverflow.com/questions/21829705/how-can-output-be-directed-to-specific-coordinates-in-the-linux-terminal
-	// http://www.isthe.com/chongo/tech/comp/ansi_escapes.html
-	// https://linux.die.net/man/3/system
-
-	//system("clear;echo test;echo test");
-	
-	//int LINES, COLUMNS;
-	//clearTerm(LINES, COLUMNS);
 
 	// Looked up the following regarding signals.
 	//
 	// https://stackoverflow.com/questions/17766550/ctrl-c-interrupt-event-handling-in-linux
 	// https://linux.die.net/man/3/atexit
-	
+
+	atexit(gracefulClose);
+
 	// Not going to use getopt here, since the only options are --help (or -h) or the
 	// file to open.
 	
@@ -95,7 +82,6 @@ int main (int argc, const char *argv[]) {
 
 	// Although the terminal will show the output, the actual changes are going to be
 	// made in this chunk of memory here.
-	//char *output = calloc(maxy * maxx, sizeof(char));
 	int numlines = 1;
 	const int MAXLEN = 50;
 	char **output = calloc(MAXLEN, sizeof(char *));
@@ -103,18 +89,10 @@ int main (int argc, const char *argv[]) {
 	int fd = open(filepath, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	FILE *fPtr = fdopen(fd, "w+");
 
-	// Take the contents of the file and stick them in memory.
+	// Take the contents of the file and stick them in memory. Also prints them.
 	// Defined in misc.c
 	numlines = readFile(fPtr, output);
 	move(0, 0);
-
-	//printw("t3:%s\n", numlines);
-	//refresh();
-	// Print the contents to the terminal.
-	//for (int i = 0; i < numlines; i++) printw("%s", output[i]);
-	//refresh();	
-
-	//printw("%i,%i,%i,%i", y, x, maxy, maxx);
 
 	while (input = getch()) {
 
@@ -178,6 +156,7 @@ int main (int argc, const char *argv[]) {
 						i++;
 					}
 					move(y, x);
+					// After shoving everything over, display the output.
 					for (int j = 0; j <= i; j++) {
 						if (output[y][x + j] != '\0') {
 							printw("%c", output[y][x + j]);
@@ -189,11 +168,11 @@ int main (int argc, const char *argv[]) {
 				}
 				break;
 			case 15: // F7 key
+				// Defined in misc.c
+				saveFile(fPtr, output, numlines);
 				break;
 			case 10: // Enter key
-				/*for (int i = y * maxx + x + 1; i < (y + 1) * maxx; i++) {
-					output[i] = '\0';
-				}*/
+				// Creates a new line in memory if needed.
 				if (y == numlines - 1) {
 					numlines++;
 					output = realloc(output, numlines * sizeof(char *));
@@ -215,6 +194,7 @@ int main (int argc, const char *argv[]) {
 				}
 				printw("%c", input);
 				getyx(stdscr, y, x);
+				// After shoving everything over, display the new output.
 				for (int j = 0; j < i; j++) {
 					if (output[y][x + j] != '\0') {
 						printw("%c", output[y][x + j]);
@@ -223,9 +203,6 @@ int main (int argc, const char *argv[]) {
 					}
 				}
 				move(y, x);
-				// This makes sure that there's always a newline at
-				// the end of a given line, since it can't go straight
-				// to NULL
 
 		}
 
